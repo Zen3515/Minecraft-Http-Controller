@@ -6,6 +6,9 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.concurrent.Callable;
+
+import com.zen3515.mcrestful.util.Utility;
 
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -47,28 +50,70 @@ public class ClientSocket implements Runnable{
 	
 	private boolean handleMessage(String msg) {
 		MCRestful.LOGGER.info("Processing message: " + msg);
+		this.player.sendMessage(new StringTextComponent("Processing message: " + msg), ChatType.CHAT);
 		if(msg == null) {
 			return false;
 		}
 		switch (msg) {
 		case "Test":
 			MCRestful.LOGGER.debug("Test case: " + msg);
-			this.player.sendMessage(new StringTextComponent("Test case: " + msg), ChatType.CHAT);
 			break;
 		default:
 			MCRestful.LOGGER.debug("Default case: " + msg);
-			this.player.sendMessage(new StringTextComponent("Default case: " + msg), ChatType.CHAT);
+			break;
+		case "MOVE_FORWARD":
+			MCRestful.LOGGER.debug("MOVE_FORWARD case: " + msg);
+			KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindForward.getKey(), true);
+			Utility.launchDelayFunction(() -> {
+				KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindForward.getKey(), false);
+				return null;
+			}, 1000L);
+			break;
+		case "MOVE_BACKWARD":
+			MCRestful.LOGGER.debug("MOVE_BACKWARD case: " + msg);
+			KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindBack.getKey(), true);
+			Utility.launchDelayFunction(() -> {
+				KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindBack.getKey(), false);
+				return null;
+			}, 1000L);
+			break;
+		case "MOVE_LEFT":
+			MCRestful.LOGGER.debug("MOVE_LEFT case: " + msg);
+			KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindLeft.getKey(), true);
+			Utility.launchDelayFunction(() -> {
+				KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindLeft.getKey(), false);
+				return null;
+			}, 1000L);
+			break;
+		case "MOVE_RIGHT":
+			MCRestful.LOGGER.debug("MOVE_RIGHT case: " + msg);
+			KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindRight.getKey(), true);
+			Utility.launchDelayFunction(() -> {
+				KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindRight.getKey(), false);
+				return null;
+			}, 1000L);
+			break;
+		case "STOP":
+			KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindForward.getKey(), false);
+			KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindBack.getKey(), false);
+			KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindLeft.getKey(), false);
+			KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindRight.getKey(), false);
 			break;
 		case "WALK_FORWARD":
 			MCRestful.LOGGER.debug("WALK_FORWARD case: " + msg);
-			this.player.sendMessage(new StringTextComponent("previous state: " + MCRestful.gameSettings.keyBindForward.isKeyDown()), ChatType.CHAT);
-			this.player.sendMessage(new StringTextComponent("sending you forward " + msg), ChatType.CHAT);
-//			MCRestful.LOGGER.debug("GAME SETTING is {}", MCRestful.gameSettings);
 			KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindForward.getKey(), true);
-//			KeyBinding.updateKeyBindState();
-			this.player.sendMessage(new StringTextComponent("current state: " + MCRestful.gameSettings.keyBindForward.isKeyDown()), ChatType.CHAT);
-//			this.player.getPitchYaw();
-//			this.player.setPositionAndUpdate(x, y, z);
+			break;
+		case "WALK_BACKWARD":
+			MCRestful.LOGGER.debug("WALK_BACKWARD case: " + msg);
+			KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindBack.getKey(), true);
+			break;
+		case "WALK_LEFT":
+			MCRestful.LOGGER.debug("WALK_LEFT case: " + msg);
+			KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindLeft.getKey(), true);
+			break;
+		case "WALK_RIGHT":
+			MCRestful.LOGGER.debug("WALK_RIGHT case: " + msg);
+			KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindRight.getKey(), true);
 			break;
 		}
 		return true;

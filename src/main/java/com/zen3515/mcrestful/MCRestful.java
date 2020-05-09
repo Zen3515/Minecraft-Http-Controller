@@ -56,8 +56,8 @@ public class MCRestful
 
     private void doClientStuff(final FMLClientSetupEvent event) {
         // do something that can only be done on the client
-    	gameSettings = event.getMinecraftSupplier().get().gameSettings;
-        LOGGER.info("Got game settings {}", gameSettings);
+    	MCRestful.gameSettings = event.getMinecraftSupplier().get().gameSettings;
+        LOGGER.info("Got game settings {}", MCRestful.gameSettings);
     }
 
 //    private void enqueueIMC(final InterModEnqueueEvent event)
