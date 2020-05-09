@@ -7,6 +7,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
+import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.text.ChatType;
 import net.minecraft.util.text.StringTextComponent;
@@ -17,7 +18,7 @@ public class ClientSocket implements Runnable{
 	private Socket socket;
 	private PrintWriter out;
 	private BufferedReader in;
-	private volatile boolean isRunning = false;
+	public volatile boolean isRunning = false;
 	
 	public ClientSocket(ServerPlayerEntity player) {
 		this.player = player;
@@ -46,38 +47,43 @@ public class ClientSocket implements Runnable{
 	
 	private boolean handleMessage(String msg) {
 		MCRestful.LOGGER.info("Processing message: " + msg);
+		if(msg == null) {
+			return false;
+		}
 		switch (msg) {
 		case "Test":
 			MCRestful.LOGGER.debug("Test case: " + msg);
-			this.player.sendMessage(new StringTextComponent("Test case: " + msg), ChatType.GAME_INFO);
+			this.player.sendMessage(new StringTextComponent("Test case: " + msg), ChatType.CHAT);
 			break;
 		default:
 			MCRestful.LOGGER.debug("Default case: " + msg);
-			this.player.sendMessage(new StringTextComponent("Default case: " + msg), ChatType.GAME_INFO);
+			this.player.sendMessage(new StringTextComponent("Default case: " + msg), ChatType.CHAT);
+			break;
+		case "WALK_FORWARD":
+			MCRestful.LOGGER.debug("WALK_FORWARD case: " + msg);
+			this.player.sendMessage(new StringTextComponent("previous state: " + MCRestful.gameSettings.keyBindForward.isKeyDown()), ChatType.CHAT);
+			this.player.sendMessage(new StringTextComponent("sending you forward " + msg), ChatType.CHAT);
+//			MCRestful.LOGGER.debug("GAME SETTING is {}", MCRestful.gameSettings);
+			KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindForward.getKey(), true);
+//			KeyBinding.updateKeyBindState();
+			this.player.sendMessage(new StringTextComponent("current state: " + MCRestful.gameSettings.keyBindForward.isKeyDown()), ChatType.CHAT);
+//			this.player.getPitchYaw();
+//			this.player.setPositionAndUpdate(x, y, z);
 			break;
 		}
-		return false;
+		return true;
 	}
 
 	@Override
 	public void run() {
 		this.isRunning = true;
-//		this.player.sendMessage(new StringTextComponent("You just type enable, you're: " + player.getName().getString()), ChatType.GAME_INFO);
 		while (this.isRunning) {
 			try {
 				String command = this.in.readLine();
 				handleMessage(command);
 			} catch (IOException e) {
 	        	MCRestful.LOGGER.error("I/O Error when readline\n" + e.getMessage());
-//				e.printStackTrace();
 			}
-//			this.player.setPositionAndUpdate(	this.player.getPositionVec().getX(), 
-//												this.player.getPositionVec().getY()+2.0, 
-//												this.player.getPositionVec().getZ());
-//            MCRestful.LOGGER.info("We are sending test connection message");
-//            this.out.print("Testing connection please");
-			
-			break;
 		}
 		this.out.close();
         try {
@@ -87,5 +93,6 @@ public class ClientSocket implements Runnable{
         	MCRestful.LOGGER.error("Couldn't get I/O for the connection.");
             System.err.println("Couldn't get I/O for the connection.");
 		}
+		this.player.sendMessage(new StringTextComponent("Stopped listening threads"), ChatType.CHAT);
 	}
 }

@@ -23,12 +23,20 @@ public class CommandEnable implements Command<CommandSource>{
 
 	@Override
 	public int run(CommandContext<CommandSource> context) throws CommandSyntaxException {
-		// TODO Auto-generated method stub
-		ServerPlayerEntity player = context.getSource().asPlayer();
-
-		MCRestful.socketThread = new Thread(new ClientSocket(player));
-		MCRestful.socketThread.start();
-//		context.getSource().sendFeedback(new StringTextComponent("You just type enable, you're: " + player.getName().getString()), false);
+		try {
+			ServerPlayerEntity player = context.getSource().asPlayer();
+			if(MCRestful.currentUser == null) {
+				MCRestful.currentUser = player.getName().getString();
+				MCRestful.socketRunnable = new ClientSocket(player);
+				MCRestful.socketThread = new Thread(MCRestful.socketRunnable);
+				MCRestful.socketThread.start();
+			} else {
+				context.getSource().sendFeedback(new StringTextComponent("Currently in use by: " + MCRestful.currentUser), false);
+			}
+		} catch (CommandSyntaxException e) {
+			context.getSource().sendFeedback(new StringTextComponent("You need to be a player to use this command"), false);
+		}
 		return 0;
 	}
+
 }

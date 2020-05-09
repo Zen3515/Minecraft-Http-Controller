@@ -2,6 +2,7 @@ package com.zen3515.mcrestful;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
+import net.minecraft.client.GameSettings;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -28,6 +29,9 @@ public class MCRestful
     static final Logger LOGGER = LogManager.getLogger();
     public static final String MOD_ID = "mcrestful";
     public static Thread socketThread = null;
+    public static ClientSocket socketRunnable = null;
+    public static String currentUser = null;
+    public static GameSettings gameSettings;
 
     public MCRestful() {
         // Register the setup method for modloading
@@ -52,7 +56,8 @@ public class MCRestful
 
     private void doClientStuff(final FMLClientSetupEvent event) {
         // do something that can only be done on the client
-        LOGGER.info("Got game settings {}", event.getMinecraftSupplier().get().gameSettings);
+    	gameSettings = event.getMinecraftSupplier().get().gameSettings;
+        LOGGER.info("Got game settings {}", gameSettings);
     }
 
 //    private void enqueueIMC(final InterModEnqueueEvent event)
