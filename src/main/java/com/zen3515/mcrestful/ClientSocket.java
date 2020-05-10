@@ -63,57 +63,83 @@ public class ClientSocket implements Runnable{
 			break;
 		case "MOVE_FORWARD":
 			MCRestful.LOGGER.debug("MOVE_FORWARD case: " + msg);
-			KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindForward.getKey(), true);
-			Utility.launchDelayFunction(() -> {
-				KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindForward.getKey(), false);
-				return null;
-			}, 1000L);
+			KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindSprint.getKey(), false);
+			Utility.pressReleaseKey(MCRestful.gameSettings.keyBindForward.getKey());
 			break;
 		case "MOVE_BACKWARD":
 			MCRestful.LOGGER.debug("MOVE_BACKWARD case: " + msg);
-			KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindBack.getKey(), true);
-			Utility.launchDelayFunction(() -> {
-				KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindBack.getKey(), false);
-				return null;
-			}, 1000L);
+			KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindSprint.getKey(), false);
+			Utility.pressReleaseKey(MCRestful.gameSettings.keyBindBack.getKey());
 			break;
 		case "MOVE_LEFT":
 			MCRestful.LOGGER.debug("MOVE_LEFT case: " + msg);
-			KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindLeft.getKey(), true);
-			Utility.launchDelayFunction(() -> {
-				KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindLeft.getKey(), false);
-				return null;
-			}, 1000L);
+			KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindSprint.getKey(), false);
+			Utility.pressReleaseKey(MCRestful.gameSettings.keyBindLeft.getKey());
 			break;
 		case "MOVE_RIGHT":
 			MCRestful.LOGGER.debug("MOVE_RIGHT case: " + msg);
-			KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindRight.getKey(), true);
-			Utility.launchDelayFunction(() -> {
-				KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindRight.getKey(), false);
-				return null;
-			}, 1000L);
+			KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindSprint.getKey(), false);
+			Utility.pressReleaseKey(MCRestful.gameSettings.keyBindRight.getKey());
 			break;
 		case "STOP":
 			KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindForward.getKey(), false);
 			KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindBack.getKey(), false);
 			KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindLeft.getKey(), false);
 			KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindRight.getKey(), false);
+			KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindSprint.getKey(), false);
 			break;
 		case "WALK_FORWARD":
 			MCRestful.LOGGER.debug("WALK_FORWARD case: " + msg);
+			KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindSprint.getKey(), false);
 			KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindForward.getKey(), true);
 			break;
 		case "WALK_BACKWARD":
 			MCRestful.LOGGER.debug("WALK_BACKWARD case: " + msg);
+			KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindSprint.getKey(), false);
 			KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindBack.getKey(), true);
 			break;
 		case "WALK_LEFT":
 			MCRestful.LOGGER.debug("WALK_LEFT case: " + msg);
+			KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindSprint.getKey(), false);
 			KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindLeft.getKey(), true);
 			break;
 		case "WALK_RIGHT":
 			MCRestful.LOGGER.debug("WALK_RIGHT case: " + msg);
+			KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindSprint.getKey(), false);
 			KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindRight.getKey(), true);
+			break;
+		case "RUN":
+			MCRestful.LOGGER.debug("RUN case: " + msg);
+			KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindForward.getKey(), true);
+			KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindSprint.getKey(), true);
+			break;
+		case "CROUCH":
+			MCRestful.LOGGER.debug("CROUCH case: " + msg);
+			Utility.pressReleaseKey(MCRestful.gameSettings.field_228046_af_.getKey()); //API suck
+			break;
+		case "JUMP":
+			MCRestful.LOGGER.debug("JUMP case: " + msg);
+			Utility.pressReleaseKey(MCRestful.gameSettings.keyBindJump.getKey(), 500L);
+			break;
+		case "JUMP_FORWARD":
+			MCRestful.LOGGER.debug("JUMP_FORWARD case: " + msg);
+			Utility.pressReleaseKey(MCRestful.gameSettings.keyBindForward.getKey());
+			Utility.pressReleaseKey(MCRestful.gameSettings.keyBindJump.getKey(), 500L);
+			break;
+		case "JUMP_BACKWARD":
+			MCRestful.LOGGER.debug("JUMP_BACKWARD case: " + msg);
+			Utility.pressReleaseKey(MCRestful.gameSettings.keyBindBack.getKey());
+			Utility.pressReleaseKey(MCRestful.gameSettings.keyBindJump.getKey(), 500L);
+			break;
+		case "JUMP_LEFT":
+			MCRestful.LOGGER.debug("JUMP_LEFT case: " + msg);
+			Utility.pressReleaseKey(MCRestful.gameSettings.keyBindLeft.getKey());
+			Utility.pressReleaseKey(MCRestful.gameSettings.keyBindJump.getKey(), 500L);
+			break;
+		case "JUMP_RIGHT":
+			MCRestful.LOGGER.debug("JUMP_RIGHT case: " + msg);
+			Utility.pressReleaseKey(MCRestful.gameSettings.keyBindRight.getKey());
+			Utility.pressReleaseKey(MCRestful.gameSettings.keyBindJump.getKey(), 500L);
 			break;
 		}
 		return true;
