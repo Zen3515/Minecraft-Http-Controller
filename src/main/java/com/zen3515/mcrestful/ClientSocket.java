@@ -11,9 +11,13 @@ import java.util.concurrent.Callable;
 import com.zen3515.mcrestful.util.Utility;
 
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.util.math.Vec2f;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.ChatType;
 import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.world.server.ServerWorld;
 
 public class ClientSocket implements Runnable{
 
@@ -53,7 +57,7 @@ public class ClientSocket implements Runnable{
 		this.player.sendMessage(new StringTextComponent("Processing message: " + msg), ChatType.CHAT);
 		if(msg == null) {
 			return false;
-		}
+		}		
 		switch (msg) {
 		case "Test":
 			MCRestful.LOGGER.debug("Test case: " + msg);
@@ -141,6 +145,91 @@ public class ClientSocket implements Runnable{
 			Utility.pressReleaseKey(MCRestful.gameSettings.keyBindRight.getKey());
 			Utility.pressReleaseKey(MCRestful.gameSettings.keyBindJump.getKey(), 500L);
 			break;
+		case "PAN_UP":
+			final float pitch_up = this.player.getPitchYaw().x;
+			final double targetPitch_up = (pitch_up <= 91 && pitch_up > 46) ? 45.0d: (pitch_up <= 46 && pitch_up > 1) ? 0.0d: (pitch_up <= 1 && pitch_up > -44) ? -45.0d: -90.0d;
+			MCRestful.LOGGER.debug("PAN_UP case: " + msg);
+			Utility.launchDelayScheduleFunction(() -> {
+				Vec3d pos = this.player.getPositionVector();
+				Vec2f pitchYaw = this.player.getPitchYaw();			
+				if(Math.abs(pitchYaw.x - targetPitch_up) < 0.5d) return null;
+//				this.player.rotateTowards(pitchYaw.y, targetPitch);
+				this.player.setPositionAndRotation(pos.x, pos.y, pos.z, pitchYaw.y, pitchYaw.x - 0.35f);
+				this.player.setPositionAndUpdate(pos.x, pos.y, pos.z);
+				return null;
+			}, 0L, 10L, 50);
+			break;
+		case "PAN_DOWN":
+			final float pitch_down = this.player.getPitchYaw().x;
+			final double targetPitch_down = (pitch_down <= 91 && pitch_down > 44) ? 90.0d: (pitch_down <= 44 && pitch_down > -1) ? 45.0d: (pitch_down <= -1 && pitch_down > -46) ? 0.0d: -45.0d;
+			MCRestful.LOGGER.debug("PAN_DOWN case: " + msg);
+			Utility.launchDelayScheduleFunction(() -> {
+				Vec3d pos = this.player.getPositionVector();
+				Vec2f pitchYaw = this.player.getPitchYaw();			
+				if(Math.abs(pitchYaw.x - targetPitch_down) < 0.5d) return null;
+				this.player.setPositionAndRotation(pos.x, pos.y, pos.z, pitchYaw.y, pitchYaw.x + 0.35f);
+				this.player.setPositionAndUpdate(pos.x, pos.y, pos.z);
+				return null;
+			}, 0L, 10L, 50);
+			break;
+		case "PAN_LEFT":
+			MCRestful.LOGGER.debug("PAN_LEFT case: " + msg);
+			final float yaw_left = this.player.getPitchYaw().y;
+			final double modRemain_left = (yaw_left % 45.0f);
+			final double targetYaw_left = yaw_left < 0 ? 
+								((modRemain_left <= -44.0f) ? yaw_left - modRemain_left - 90 :yaw_left - modRemain_left - 45) :
+								((modRemain_left <= 1.0f) ? yaw_left - modRemain_left - 45 :yaw_left - modRemain_left);
+			Utility.launchDelayScheduleFunction(() -> {
+				Vec3d pos = this.player.getPositionVector();
+				Vec2f pitchYaw = this.player.getPitchYaw();			
+				if(Math.abs(pitchYaw.y - targetYaw_left) < 0.5d) {
+					this.player.setPositionAndRotation(pos.x, pos.y, pos.z, (float) targetYaw_left, pitchYaw.x);
+					this.player.setPositionAndUpdate(pos.x, pos.y, pos.z);
+					return null;
+				}
+				this.player.setPositionAndRotation(pos.x, pos.y, pos.z, pitchYaw.y - 0.35f, pitchYaw.x);
+				this.player.setPositionAndUpdate(pos.x, pos.y, pos.z);
+				return null;
+			}, 0L, 10L, 50);
+			break;
+		case "PAN_RIGHT":
+			MCRestful.LOGGER.debug("PAN_RIGHT case: " + msg);
+			final float yaw_right = this.player.getPitchYaw().y;
+			final double modRemain_right = (yaw_right % 45.0f);
+			final double targetYaw_right = yaw_right < 0 ? 
+								((modRemain_right >= -1.0f) ? yaw_right - modRemain_right + 45: yaw_right - modRemain_right) :
+								((modRemain_right >= 44.0f) ? yaw_right - modRemain_right + 90: yaw_right - modRemain_right + 45);
+			Utility.launchDelayScheduleFunction(() -> {
+				Vec3d pos = this.player.getPositionVector();
+				Vec2f pitchYaw = this.player.getPitchYaw();			
+				if(Math.abs(pitchYaw.y - targetYaw_right) < 0.5d) {
+					this.player.setPositionAndRotation(pos.x, pos.y, pos.z, (float) targetYaw_right, pitchYaw.x);
+					this.player.setPositionAndUpdate(pos.x, pos.y, pos.z);
+					return null;
+				}
+				this.player.setPositionAndRotation(pos.x, pos.y, pos.z, pitchYaw.y + 0.35f, pitchYaw.x);
+				this.player.setPositionAndUpdate(pos.x, pos.y, pos.z);
+				return null;
+			}, 0L, 10L, 50);
+			break;
+			
+			
+//			final float pitch_left = this.player.getPitchYaw().y;
+////			final double targetYaw_left = (pitch_left <= 181 && pitch_left > 136) ? 135: (pitch_left <= 136 && pitch_left > 91) ? 90: (pitch_left <= 91 && pitch_left > 46) ? 45: 
+////											(pitch_left <= 46 && pitch_left > 1) ? 0: (pitch_left <= 1 && pitch_left > -44) ? -45: (pitch_left <= -44 && pitch_left > -89) ? -90: (pitch_left <= -89 && pitch_left > -134) ? -135: -180;
+//			final double targetYaw_left = (pitch_left <= 1 && pitch_left > -44) ? -45: (pitch_left <= -44 && pitch_left > -89) ? -90: (pitch_left <= -89 && pitch_left > -134) ? -135: (pitch_left <= -134 && pitch_left > -179) ? -180: 
+//										  (pitch_left <= -179 && pitch_left > -224) ? -225: (pitch_left <= -224 && pitch_left > -269) ? -270: (pitch_left <= -269 && pitch_left > -314) ? -315: (pitch_left <= -314 && pitch_left > -359) ? -360: -45;
+//			MCRestful.LOGGER.debug("PAN_LEFT case: " + msg);
+//			this.player.sendMessage(new StringTextComponent("targetYaw_left " + targetYaw_left), ChatType.CHAT);
+//			Utility.launchDelayScheduleFunction(() -> {
+//				Vec3d pos = this.player.getPositionVector();
+//				Vec2f pitchYaw = this.player.getPitchYaw();			
+//				if(Math.abs(pitchYaw.y - targetYaw_left) < 0.5d) return null;
+//				this.player.setPositionAndRotation(pos.x, pos.y, pos.z, pitchYaw.y - 0.35f, pitchYaw.x);
+//				this.player.setPositionAndUpdate(pos.x, pos.y, pos.z);
+//				return null;
+//			}, 0L, 10L, 50);
+//			break;
 		}
 		return true;
 	}

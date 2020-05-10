@@ -2,12 +2,40 @@ package com.zen3515.mcrestful.util;
 
 import java.util.concurrent.Callable;
 
-import com.zen3515.mcrestful.MCRestful;
-
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.client.util.InputMappings.Input;
 
 public class Utility {
+	
+	/**
+	 * Schedule At FixedRate a function call
+	 * @param callback - you can use lambda like this "() -> { return null; }" 
+	 * @param delayedTime - long: time in milliseconds
+	 */
+	public static void launchDelayScheduleFunction(Callable<?> callback, long delayedTime, long period, int maxExecCount) {
+		new java.util.Timer().scheduleAtFixedRate( 
+	        new java.util.TimerTask() {
+	        	private int executionCount = 0;
+	        	
+	            @Override
+	            public void run() {
+	                // your code here
+	            	try {
+	            		if(maxExecCount != 0 && executionCount < maxExecCount) {
+							callback.call();
+							executionCount += 1;
+	            		} else {
+	            			this.cancel();
+	            		}
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+	            }
+	        }, 
+	        delayedTime, period
+		);
+	}
+	
 	/**
 	 * Delayed a function call
 	 * @param callback - you can use lambda like this "() -> { return null; }" 
