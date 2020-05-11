@@ -10,9 +10,14 @@ import java.util.concurrent.Callable;
 
 import com.zen3515.mcrestful.util.Utility;
 
+import net.minecraft.block.BlockState;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.RayTraceContext;
+import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.ChatType;
@@ -152,11 +157,11 @@ public class ClientSocket implements Runnable{
 			Utility.launchDelayScheduleFunction(() -> {
 				Vec3d pos = this.player.getPositionVector();
 				Vec2f pitchYaw = this.player.getPitchYaw();			
-				if(Math.abs(pitchYaw.x - targetPitch_up) < 0.5d) return null;
+				if(Math.abs(pitchYaw.x - targetPitch_up) < 0.5d) return true;
 //				this.player.rotateTowards(pitchYaw.y, targetPitch);
 				this.player.setPositionAndRotation(pos.x, pos.y, pos.z, pitchYaw.y, pitchYaw.x - 0.35f);
 				this.player.setPositionAndUpdate(pos.x, pos.y, pos.z);
-				return null;
+				return false;
 			}, 0L, 10L, 50);
 			break;
 		case "PAN_DOWN":
@@ -166,10 +171,10 @@ public class ClientSocket implements Runnable{
 			Utility.launchDelayScheduleFunction(() -> {
 				Vec3d pos = this.player.getPositionVector();
 				Vec2f pitchYaw = this.player.getPitchYaw();			
-				if(Math.abs(pitchYaw.x - targetPitch_down) < 0.5d) return null;
+				if(Math.abs(pitchYaw.x - targetPitch_down) < 0.5d) return true;
 				this.player.setPositionAndRotation(pos.x, pos.y, pos.z, pitchYaw.y, pitchYaw.x + 0.35f);
 				this.player.setPositionAndUpdate(pos.x, pos.y, pos.z);
-				return null;
+				return false;
 			}, 0L, 10L, 50);
 			break;
 		case "PAN_LEFT":
@@ -185,11 +190,11 @@ public class ClientSocket implements Runnable{
 				if(Math.abs(pitchYaw.y - targetYaw_left) < 0.5d) {
 					this.player.setPositionAndRotation(pos.x, pos.y, pos.z, (float) targetYaw_left, pitchYaw.x);
 					this.player.setPositionAndUpdate(pos.x, pos.y, pos.z);
-					return null;
+					return true;
 				}
 				this.player.setPositionAndRotation(pos.x, pos.y, pos.z, pitchYaw.y - 0.35f, pitchYaw.x);
 				this.player.setPositionAndUpdate(pos.x, pos.y, pos.z);
-				return null;
+				return false;
 			}, 0L, 10L, 50);
 			break;
 		case "PAN_RIGHT":
@@ -205,31 +210,60 @@ public class ClientSocket implements Runnable{
 				if(Math.abs(pitchYaw.y - targetYaw_right) < 0.5d) {
 					this.player.setPositionAndRotation(pos.x, pos.y, pos.z, (float) targetYaw_right, pitchYaw.x);
 					this.player.setPositionAndUpdate(pos.x, pos.y, pos.z);
-					return null;
+					return true;
 				}
 				this.player.setPositionAndRotation(pos.x, pos.y, pos.z, pitchYaw.y + 0.35f, pitchYaw.x);
 				this.player.setPositionAndUpdate(pos.x, pos.y, pos.z);
-				return null;
+				return false;
 			}, 0L, 10L, 50);
 			break;
-			
-			
-//			final float pitch_left = this.player.getPitchYaw().y;
-////			final double targetYaw_left = (pitch_left <= 181 && pitch_left > 136) ? 135: (pitch_left <= 136 && pitch_left > 91) ? 90: (pitch_left <= 91 && pitch_left > 46) ? 45: 
-////											(pitch_left <= 46 && pitch_left > 1) ? 0: (pitch_left <= 1 && pitch_left > -44) ? -45: (pitch_left <= -44 && pitch_left > -89) ? -90: (pitch_left <= -89 && pitch_left > -134) ? -135: -180;
-//			final double targetYaw_left = (pitch_left <= 1 && pitch_left > -44) ? -45: (pitch_left <= -44 && pitch_left > -89) ? -90: (pitch_left <= -89 && pitch_left > -134) ? -135: (pitch_left <= -134 && pitch_left > -179) ? -180: 
-//										  (pitch_left <= -179 && pitch_left > -224) ? -225: (pitch_left <= -224 && pitch_left > -269) ? -270: (pitch_left <= -269 && pitch_left > -314) ? -315: (pitch_left <= -314 && pitch_left > -359) ? -360: -45;
-//			MCRestful.LOGGER.debug("PAN_LEFT case: " + msg);
-//			this.player.sendMessage(new StringTextComponent("targetYaw_left " + targetYaw_left), ChatType.CHAT);
-//			Utility.launchDelayScheduleFunction(() -> {
-//				Vec3d pos = this.player.getPositionVector();
-//				Vec2f pitchYaw = this.player.getPitchYaw();			
-//				if(Math.abs(pitchYaw.y - targetYaw_left) < 0.5d) return null;
-//				this.player.setPositionAndRotation(pos.x, pos.y, pos.z, pitchYaw.y - 0.35f, pitchYaw.x);
-//				this.player.setPositionAndUpdate(pos.x, pos.y, pos.z);
-//				return null;
-//			}, 0L, 10L, 50);
-//			break;
+		case "PAN_FLIP":
+			MCRestful.LOGGER.debug("PAN_FLIP case: " + msg);
+			final float yaw_flip = this.player.getPitchYaw().y;
+			final double targetYaw_flip = yaw_flip + 180;
+			Utility.launchDelayScheduleFunction(() -> {
+				Vec3d pos = this.player.getPositionVector();
+				Vec2f pitchYaw = this.player.getPitchYaw();			
+				if(Math.abs(pitchYaw.y - targetYaw_flip) < 6.5d) {
+					this.player.setPositionAndRotation(pos.x, pos.y, pos.z, (float) targetYaw_flip, pitchYaw.x);
+					this.player.setPositionAndUpdate(pos.x, pos.y, pos.z);
+					return true;
+				}
+				this.player.setPositionAndRotation(pos.x, pos.y, pos.z, pitchYaw.y + 3.0f, pitchYaw.x);
+				this.player.setPositionAndUpdate(pos.x, pos.y, pos.z);
+				return false;
+			}, 0L, 10L, 500);
+			break;
+		case "MOUSE_LEFT":
+			// TODO: is it too short or long, it doesn't work as weel, might need sweep animation ?
+			MCRestful.LOGGER.debug("MOUSE_LEFT case: " + msg);
+			Utility.pressReleaseKey(MCRestful.gameSettings.keyBindAttack.getKey(), 225L);
+			break;
+		case "MOUSE_RIGHT":
+			MCRestful.LOGGER.debug("MOUSE_RIGHT case: " + msg);
+			Utility.pressReleaseKey(MCRestful.gameSettings.keyBindUseItem.getKey(), 100L);
+			break;
+		case "CHARGE":
+			MCRestful.LOGGER.debug("CHARGE case: " + msg);
+			KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindUseItem.getKey(), true);
+			break;
+		case "RELEASE":
+			MCRestful.LOGGER.debug("RELEASE case: " + msg);
+			KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindUseItem.getKey(), false);
+			break;
+		case "MOUSE_LEFT_HOLD_UNTIL_BREAK":
+			MCRestful.LOGGER.debug("MOUSE_LEFT_HOLD_UNTIL_BREAK case: " + msg);
+			// Player can only reach 5 block
+			// TODO: just ratrace everytime to see if it break or not
+			final RayTraceResult rayTraceResult = this.player.getEntityWorld().rayTraceBlocks(new RayTraceContext(this.player.getEyePosition(0f), this.player.getEyePosition(0f).add(this.player.getLookVec().scale(5)), RayTraceContext.BlockMode.OUTLINE, RayTraceContext.FluidMode.ANY, this.player));
+			final Vec3d hitPosition = rayTraceResult.getHitVec();
+			BlockState blockState = this.player.getEntityWorld().getWorld().getBlockState(new BlockPos(hitPosition));
+			this.player.sendMessage(new StringTextComponent("looking at: " + hitPosition.toString() + ", block: " + blockState.toString()), ChatType.CHAT);
+			Utility.launchDelayScheduleFunction(() -> {	
+				
+				return false;
+			}, 0L, 100L, 50);
+			break;
 		}
 		return true;
 	}

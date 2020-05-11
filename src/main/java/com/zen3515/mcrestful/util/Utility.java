@@ -9,20 +9,21 @@ public class Utility {
 	
 	/**
 	 * Schedule At FixedRate a function call
-	 * @param callback - you can use lambda like this "() -> { return null; }" 
+	 * @param callback - you can use lambda like this "() -> { return true; } # True mean done" 
 	 * @param delayedTime - long: time in milliseconds
 	 */
-	public static void launchDelayScheduleFunction(Callable<?> callback, long delayedTime, long period, int maxExecCount) {
+	public static void launchDelayScheduleFunction(Callable<Boolean> callback, long delayedTime, long period, int maxExecCount) {
 		new java.util.Timer().scheduleAtFixedRate( 
 	        new java.util.TimerTask() {
 	        	private int executionCount = 0;
+	        	private boolean isDone = false;
 	        	
 	            @Override
 	            public void run() {
 	                // your code here
 	            	try {
-	            		if(maxExecCount != 0 && executionCount < maxExecCount) {
-							callback.call();
+	            		if(isDone == false && maxExecCount != 0 && executionCount < maxExecCount) {
+	            			isDone = callback.call();
 							executionCount += 1;
 	            		} else {
 	            			this.cancel();
