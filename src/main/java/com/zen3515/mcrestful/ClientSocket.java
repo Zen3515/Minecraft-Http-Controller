@@ -262,34 +262,21 @@ public class ClientSocket implements Runnable{
 			break;
 		case "MOUSE_LEFT_HOLD_UNTIL_BREAK":
 			MCRestful.LOGGER.debug("MOUSE_LEFT_HOLD_UNTIL_BREAK case: " + msg);
-			// Player can only reach 5 block
-			// TODO: just ray trace every time to see if it break or not
-//			final RayTraceResult rayTraceResult = this.player.getEntityWorld().rayTraceBlocks(new RayTraceContext(this.player.getEyePosition(0f), this.player.getEyePosition(0f).add(this.player.getLookVec().scale(5)), RayTraceContext.BlockMode.OUTLINE, RayTraceContext.FluidMode.ANY, this.player));
-//			final Vec3d hitPosition = rayTraceResult.getHitVec();
-//			final BlockPos blockPosition = new BlockPos(hitPosition);
-//			BlockState blockState = this.player.getEntityWorld().getBlockState(blockPosition);
-//			this.player.sendMessage(new StringTextComponent("looking at: " + hitPosition.toString() + ", block: " + blockState.toString()), ChatType.CHAT);
-//			Utility.launchDelayScheduleFunction(() -> {	
-//				
-//				return false;
-//			}, 0L, 100L, 50);
 			if(mcInstance.objectMouseOver.getType() == RayTraceResult.Type.BLOCK) {
+				KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindAttack.getKey(), true);
 				BlockRayTraceResult target_hold_left = (BlockRayTraceResult)mcInstance.objectMouseOver;
 				Material target_mat = mcInstance.world.getBlockState(target_hold_left.getPos()).getMaterial();
 				Utility.launchDelayScheduleFunction(() -> {
 					if(mcInstance.objectMouseOver.getType() != RayTraceResult.Type.BLOCK) {
+						KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindAttack.getKey(), false);
 						return true;
 					}
 					BlockRayTraceResult blockraytraceresult = (BlockRayTraceResult)mcInstance.objectMouseOver;
 					if(	!Utility.isSameBlockPos(target_hold_left.getPos(), blockraytraceresult.getPos()) ||
 						target_mat != mcInstance.world.getBlockState(blockraytraceresult.getPos()).getMaterial()) {
+						KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindAttack.getKey(), false);
 						return true;
 					}
-//					BlockPos blockpos = blockraytraceresult.getPos();
-//					if (!mcInstance.world.isAirBlock(blockpos)) {
-//						mcInstance.playerController.clickBlock(blockpos, blockraytraceresult.getFace());
-//					}
-					Utility.clickMouse();
 					return false;
 				}, 0L, 50L, 200); //At most 10 sec
 			}
