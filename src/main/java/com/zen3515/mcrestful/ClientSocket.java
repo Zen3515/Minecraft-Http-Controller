@@ -11,11 +11,15 @@ import java.util.concurrent.Callable;
 import com.zen3515.mcrestful.util.Utility;
 
 import net.minecraft.block.BlockState;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.util.Direction;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.RayTraceContext;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec2f;
@@ -23,6 +27,9 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.ChatType;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.client.event.InputEvent;
+import net.minecraftforge.client.event.InputEvent.ClickInputEvent;
+import net.minecraftforge.common.MinecraftForge;
 
 public class ClientSocket implements Runnable{
 
@@ -237,7 +244,35 @@ public class ClientSocket implements Runnable{
 		case "MOUSE_LEFT":
 			// TODO: is it too short or long, it doesn't work as weel, might need sweep animation ?
 			MCRestful.LOGGER.debug("MOUSE_LEFT case: " + msg);
-			Utility.pressReleaseKey(MCRestful.gameSettings.keyBindAttack.getKey(), 225L);
+//			this.player.swingArm(Hand.MAIN_HAND);
+//			Minecraft.getInstance().player.swingArm(Hand.MAIN_HAND);
+//			Utility.pressReleaseKey(MCRestful.gameSettings.keyBindAttack.getKey(), 150L);
+//	        MinecraftForge.EVENT_BUS.post(new InputEvent.ClickInputEvent(MCRestful.gameSettings.keyBindAttack.getKey().getKeyCode(), MCRestful.gameSettings.keyBindAttack.getKeyBinding(), Hand.MAIN_HAND));
+			final RayTraceResult rayTraceResult_ML = this.player.getEntityWorld().rayTraceBlocks(new RayTraceContext(this.player.getEyePosition(0f), this.player.getEyePosition(0f).add(this.player.getLookVec().scale(5)), RayTraceContext.BlockMode.OUTLINE, RayTraceContext.FluidMode.ANY, this.player));
+			final Vec3d hitPosition_ML = rayTraceResult_ML.getHitVec();
+			final BlockPos blockPosition_ML = new BlockPos(hitPosition_ML);
+			final Minecraft mcInstance = Minecraft.getInstance();
+//			BlockState blockState_ML = this.player.getEntityWorld().getBlockState(blockPosition_ML);
+			if(!this.player.getEntityWorld().isAirBlock(blockPosition_ML)) {
+				ClickInputEvent inputEvent = net.minecraftforge.client.ForgeHooksClient.onClickInput(0,  MCRestful.gameSettings.keyBindAttack, Hand.MAIN_HAND);
+				if (inputEvent.isCanceled()) {
+					if (inputEvent.shouldSwingHand()) {
+						mcInstance.particles.addBlockHitEffects(blockPosition_ML, (BlockRayTraceResult)rayTraceResult_ML);
+						mcInstance.player.swingArm(Hand.MAIN_HAND);
+					}
+					break;
+			   }
+			   Direction direction = ((BlockRayTraceResult)rayTraceResult_ML).getFace();
+//			   if (mcInstance.playerController.onPlayerDamageBlock(blockPosition_ML, direction)) { // This does not break
+			   if (mcInstance.playerController.clickBlock(blockPosition_ML, direction)) {
+			      if (inputEvent.shouldSwingHand()) {
+			    	  mcInstance.particles.addBlockHitEffects(blockPosition_ML, (BlockRayTraceResult)rayTraceResult_ML);
+			    	  mcInstance.player.swingArm(Hand.MAIN_HAND);
+			      }
+			   }
+			} else {
+				mcInstance.playerController.resetBlockRemoving();
+			}
 			break;
 		case "MOUSE_RIGHT":
 			MCRestful.LOGGER.debug("MOUSE_RIGHT case: " + msg);
@@ -254,10 +289,11 @@ public class ClientSocket implements Runnable{
 		case "MOUSE_LEFT_HOLD_UNTIL_BREAK":
 			MCRestful.LOGGER.debug("MOUSE_LEFT_HOLD_UNTIL_BREAK case: " + msg);
 			// Player can only reach 5 block
-			// TODO: just ratrace everytime to see if it break or not
+			// TODO: just ray trace every time to see if it break or not
 			final RayTraceResult rayTraceResult = this.player.getEntityWorld().rayTraceBlocks(new RayTraceContext(this.player.getEyePosition(0f), this.player.getEyePosition(0f).add(this.player.getLookVec().scale(5)), RayTraceContext.BlockMode.OUTLINE, RayTraceContext.FluidMode.ANY, this.player));
 			final Vec3d hitPosition = rayTraceResult.getHitVec();
-			BlockState blockState = this.player.getEntityWorld().getWorld().getBlockState(new BlockPos(hitPosition));
+			final BlockPos blockPosition = new BlockPos(hitPosition);
+			BlockState blockState = this.player.getEntityWorld().getBlockState(blockPosition);
 			this.player.sendMessage(new StringTextComponent("looking at: " + hitPosition.toString() + ", block: " + blockState.toString()), ChatType.CHAT);
 			Utility.launchDelayScheduleFunction(() -> {	
 				
