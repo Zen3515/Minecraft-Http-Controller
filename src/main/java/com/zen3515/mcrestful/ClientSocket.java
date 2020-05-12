@@ -11,6 +11,7 @@ import java.util.concurrent.Callable;
 import com.zen3515.mcrestful.util.Utility;
 
 import net.minecraft.block.BlockState;
+import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.Entity;
@@ -20,6 +21,7 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
+import net.minecraft.util.math.EntityRayTraceResult;
 import net.minecraft.util.math.RayTraceContext;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec2f;
@@ -66,6 +68,7 @@ public class ClientSocket implements Runnable{
 	
 	private boolean handleMessage(String msg) {
 		MCRestful.LOGGER.info("Processing message: " + msg);
+		final Minecraft mcInstance = Minecraft.getInstance();
 		this.player.sendMessage(new StringTextComponent("Processing message: " + msg), ChatType.CHAT);
 		if(msg == null) {
 			return false;
@@ -242,37 +245,8 @@ public class ClientSocket implements Runnable{
 			}, 0L, 10L, 500);
 			break;
 		case "MOUSE_LEFT":
-			// TODO: is it too short or long, it doesn't work as weel, might need sweep animation ?
 			MCRestful.LOGGER.debug("MOUSE_LEFT case: " + msg);
-//			this.player.swingArm(Hand.MAIN_HAND);
-//			Minecraft.getInstance().player.swingArm(Hand.MAIN_HAND);
-//			Utility.pressReleaseKey(MCRestful.gameSettings.keyBindAttack.getKey(), 150L);
-//	        MinecraftForge.EVENT_BUS.post(new InputEvent.ClickInputEvent(MCRestful.gameSettings.keyBindAttack.getKey().getKeyCode(), MCRestful.gameSettings.keyBindAttack.getKeyBinding(), Hand.MAIN_HAND));
-			final RayTraceResult rayTraceResult_ML = this.player.getEntityWorld().rayTraceBlocks(new RayTraceContext(this.player.getEyePosition(0f), this.player.getEyePosition(0f).add(this.player.getLookVec().scale(5)), RayTraceContext.BlockMode.OUTLINE, RayTraceContext.FluidMode.ANY, this.player));
-			final Vec3d hitPosition_ML = rayTraceResult_ML.getHitVec();
-			final BlockPos blockPosition_ML = new BlockPos(hitPosition_ML);
-			final Minecraft mcInstance = Minecraft.getInstance();
-//			BlockState blockState_ML = this.player.getEntityWorld().getBlockState(blockPosition_ML);
-			if(!this.player.getEntityWorld().isAirBlock(blockPosition_ML)) {
-				ClickInputEvent inputEvent = net.minecraftforge.client.ForgeHooksClient.onClickInput(0,  MCRestful.gameSettings.keyBindAttack, Hand.MAIN_HAND);
-				if (inputEvent.isCanceled()) {
-					if (inputEvent.shouldSwingHand()) {
-						mcInstance.particles.addBlockHitEffects(blockPosition_ML, (BlockRayTraceResult)rayTraceResult_ML);
-						mcInstance.player.swingArm(Hand.MAIN_HAND);
-					}
-					break;
-			   }
-			   Direction direction = ((BlockRayTraceResult)rayTraceResult_ML).getFace();
-//			   if (mcInstance.playerController.onPlayerDamageBlock(blockPosition_ML, direction)) { // This does not break
-			   if (mcInstance.playerController.clickBlock(blockPosition_ML, direction)) {
-			      if (inputEvent.shouldSwingHand()) {
-			    	  mcInstance.particles.addBlockHitEffects(blockPosition_ML, (BlockRayTraceResult)rayTraceResult_ML);
-			    	  mcInstance.player.swingArm(Hand.MAIN_HAND);
-			      }
-			   }
-			} else {
-				mcInstance.playerController.resetBlockRemoving();
-			}
+			Utility.clickMouse();
 			break;
 		case "MOUSE_RIGHT":
 			MCRestful.LOGGER.debug("MOUSE_RIGHT case: " + msg);
@@ -290,15 +264,35 @@ public class ClientSocket implements Runnable{
 			MCRestful.LOGGER.debug("MOUSE_LEFT_HOLD_UNTIL_BREAK case: " + msg);
 			// Player can only reach 5 block
 			// TODO: just ray trace every time to see if it break or not
-			final RayTraceResult rayTraceResult = this.player.getEntityWorld().rayTraceBlocks(new RayTraceContext(this.player.getEyePosition(0f), this.player.getEyePosition(0f).add(this.player.getLookVec().scale(5)), RayTraceContext.BlockMode.OUTLINE, RayTraceContext.FluidMode.ANY, this.player));
-			final Vec3d hitPosition = rayTraceResult.getHitVec();
-			final BlockPos blockPosition = new BlockPos(hitPosition);
-			BlockState blockState = this.player.getEntityWorld().getBlockState(blockPosition);
-			this.player.sendMessage(new StringTextComponent("looking at: " + hitPosition.toString() + ", block: " + blockState.toString()), ChatType.CHAT);
-			Utility.launchDelayScheduleFunction(() -> {	
-				
-				return false;
-			}, 0L, 100L, 50);
+//			final RayTraceResult rayTraceResult = this.player.getEntityWorld().rayTraceBlocks(new RayTraceContext(this.player.getEyePosition(0f), this.player.getEyePosition(0f).add(this.player.getLookVec().scale(5)), RayTraceContext.BlockMode.OUTLINE, RayTraceContext.FluidMode.ANY, this.player));
+//			final Vec3d hitPosition = rayTraceResult.getHitVec();
+//			final BlockPos blockPosition = new BlockPos(hitPosition);
+//			BlockState blockState = this.player.getEntityWorld().getBlockState(blockPosition);
+//			this.player.sendMessage(new StringTextComponent("looking at: " + hitPosition.toString() + ", block: " + blockState.toString()), ChatType.CHAT);
+//			Utility.launchDelayScheduleFunction(() -> {	
+//				
+//				return false;
+//			}, 0L, 100L, 50);
+			if(mcInstance.objectMouseOver.getType() == RayTraceResult.Type.BLOCK) {
+				BlockRayTraceResult target_hold_left = (BlockRayTraceResult)mcInstance.objectMouseOver;
+				Material target_mat = mcInstance.world.getBlockState(target_hold_left.getPos()).getMaterial();
+				Utility.launchDelayScheduleFunction(() -> {
+					if(mcInstance.objectMouseOver.getType() != RayTraceResult.Type.BLOCK) {
+						return true;
+					}
+					BlockRayTraceResult blockraytraceresult = (BlockRayTraceResult)mcInstance.objectMouseOver;
+					if(	!Utility.isSameBlockPos(target_hold_left.getPos(), blockraytraceresult.getPos()) ||
+						target_mat != mcInstance.world.getBlockState(blockraytraceresult.getPos()).getMaterial()) {
+						return true;
+					}
+//					BlockPos blockpos = blockraytraceresult.getPos();
+//					if (!mcInstance.world.isAirBlock(blockpos)) {
+//						mcInstance.playerController.clickBlock(blockpos, blockraytraceresult.getFace());
+//					}
+					Utility.clickMouse();
+					return false;
+				}, 0L, 50L, 200); //At most 10 sec
+			}
 			break;
 		}
 		return true;

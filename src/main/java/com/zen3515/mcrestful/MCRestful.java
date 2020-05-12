@@ -26,7 +26,7 @@ import com.zen3515.mcrestful.commands.ModCommand;
 public class MCRestful
 {
     // Directly reference a log4j logger.
-    static final Logger LOGGER = LogManager.getLogger();
+    public static final Logger LOGGER = LogManager.getLogger();
     public static final String MOD_ID = "mcrestful";
     public static Thread socketThread = null;
     public static ClientSocket socketRunnable = null;
