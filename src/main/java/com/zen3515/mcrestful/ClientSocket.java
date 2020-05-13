@@ -13,7 +13,9 @@ import com.zen3515.mcrestful.util.Utility;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.client.util.InputMappings;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -280,6 +282,48 @@ public class ClientSocket implements Runnable{
 					return false;
 				}, 0L, 50L, 200); //At most 10 sec
 			}
+			break;
+		case "GAME_PAUSE":
+			MCRestful.LOGGER.debug("GAME_PAUSE case: " + msg);
+//			Utility.pressReleaseKey(InputMappings.getInputByName("key.keyboard.escape"));
+			mcInstance.displayInGameMenu(false);
+			break;
+		case "GAME_RESUME":
+			MCRestful.LOGGER.debug("GAME_RESUME case: " + msg);
+//			mcInstance.setGameFocused(true);
+//			Utility.pressReleaseKey(InputMappings.getInputByName("key.keyboard.escape"));
+			this.player.sendMessage(new StringTextComponent("mcInstance.isGameFocused() = " + mcInstance.isGameFocused() + mcInstance.mouseHelper.isMouseGrabbed()), ChatType.CHAT);
+			mcInstance.currentScreen.keyPressed(256, 0, 0); //press esc
+			this.player.sendMessage(new StringTextComponent("mcInstance.isGameFocused() = " + mcInstance.isGameFocused() + mcInstance.mouseHelper.isMouseGrabbed()), ChatType.CHAT);
+//			mcInstance.displayGuiScreen((Screen)null);
+//			mcInstance.mouseHelper.ungrabMouse();
+//			mcInstance.setGameFocused(true);
+//			mcInstance.mouseHelper.grabMouse(); //TODO: bug does not grab the mouse
+//			mcInstance.currentScreen.setFocused(p_setFocused_1_);
+			break;
+		case "WEATHER_RAIN":
+			MCRestful.LOGGER.debug("WEATHER_RAIN case: " + msg);
+			this.player.getServerWorld().getWorldInfo().setClearWeatherTime(0);
+			this.player.getServerWorld().getWorldInfo().setRainTime(0);
+			this.player.getServerWorld().getWorldInfo().setThunderTime(0);
+			this.player.getServerWorld().getWorldInfo().setRaining(true);
+			this.player.getServerWorld().getWorldInfo().setThundering(false);
+			break;
+		case "WEATHER_CLEAR":
+			MCRestful.LOGGER.debug("WEATHER_CLEAR case: " + msg);
+			this.player.getServerWorld().getWorldInfo().setClearWeatherTime(24000);
+			this.player.getServerWorld().getWorldInfo().setRainTime(0);
+			this.player.getServerWorld().getWorldInfo().setThunderTime(0);
+			this.player.getServerWorld().getWorldInfo().setRaining(false);
+			this.player.getServerWorld().getWorldInfo().setThundering(false);
+			break;
+		case "WEATHER_THUNDER":
+			MCRestful.LOGGER.debug("WEATHER_THUNDER case: " + msg);
+			this.player.getServerWorld().getWorldInfo().setClearWeatherTime(0);
+			this.player.getServerWorld().getWorldInfo().setRainTime(0);
+			this.player.getServerWorld().getWorldInfo().setThunderTime(0);
+			this.player.getServerWorld().getWorldInfo().setRaining(true);
+			this.player.getServerWorld().getWorldInfo().setThundering(true);
 			break;
 		}
 		return true;
