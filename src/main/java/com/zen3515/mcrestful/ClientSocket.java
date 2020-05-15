@@ -17,8 +17,13 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.client.util.InputMappings;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.ILivingEntityData;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.MobEntity;
+import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
@@ -30,6 +35,7 @@ import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.ChatType;
 import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.world.Difficulty;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.client.event.InputEvent.ClickInputEvent;
@@ -324,6 +330,54 @@ public class ClientSocket implements Runnable{
 			this.player.getServerWorld().getWorldInfo().setThunderTime(0);
 			this.player.getServerWorld().getWorldInfo().setRaining(true);
 			this.player.getServerWorld().getWorldInfo().setThundering(true);
+			break;
+		case "TIME_DAY":
+			MCRestful.LOGGER.debug("TIME_DAY case: " + msg);
+			for(ServerWorld serverworld : this.player.getServer().getWorlds()) {
+				serverworld.setDayTime(1000L);
+			}
+			break;
+		case "TIME_LATE":
+			MCRestful.LOGGER.debug("TIME_LATE case: " + msg);
+			for(ServerWorld serverworld : this.player.getServer().getWorlds()) {
+				serverworld.setDayTime(2000L);
+			}
+			break;
+		case "TIME_NOON":
+			MCRestful.LOGGER.debug("TIME_NOON case: " + msg);
+			for(ServerWorld serverworld : this.player.getServer().getWorlds()) {
+				serverworld.setDayTime(6000L);
+			}
+			break;
+		case "TIME_NIGHT":
+			MCRestful.LOGGER.debug("TIME_NIGHT case: " + msg);
+			for(ServerWorld serverworld : this.player.getServer().getWorlds()) {
+				serverworld.setDayTime(13000L);
+			}
+			break;
+		case "TIME_MIDNIGHT":
+			MCRestful.LOGGER.debug("TIME_MIDNIGHT case: " + msg);
+			for(ServerWorld serverworld : this.player.getServer().getWorlds()) {
+				serverworld.setDayTime(18000L);
+			}
+			break;
+		case "DIFFICULTY_PEACEFUL":
+			MCRestful.LOGGER.debug("DIFFICULTY_PEACEFUL case: " + msg);
+			this.player.getServer().setDifficultyForAllWorlds(Difficulty.PEACEFUL, true);
+			break;
+		case "DIFFICULTY_HARD":
+			MCRestful.LOGGER.debug("DIFFICULTY_HARD case: " + msg);
+			this.player.getServer().setDifficultyForAllWorlds(Difficulty.HARD, true);
+			break;
+		case "SUMMON_PIG":
+			MCRestful.LOGGER.debug("SUMMON_PIG case: " + msg);
+			CompoundNBT compoundnbt = new CompoundNBT();
+			compoundnbt.putString("id", EntityType.getKey(EntityType.PIG).toString());
+			Entity entity = EntityType.func_220335_a(compoundnbt, this.player.getServerWorld(), (pigEntity) -> {
+				pigEntity.setLocationAndAngles(this.player.getPositionVec().x, this.player.getPositionVec().y, this.player.getPositionVec().z, pigEntity.rotationYaw, pigEntity.rotationPitch);
+	            return !this.player.getServerWorld().summonEntity(pigEntity) ? null : pigEntity;
+	         });
+			((MobEntity)entity).onInitialSpawn(this.player.getEntityWorld(), this.player.getEntityWorld().getDifficultyForLocation(new BlockPos(entity)), SpawnReason.COMMAND, (ILivingEntityData)null, (CompoundNBT)null);
 			break;
 		}
 		return true;
