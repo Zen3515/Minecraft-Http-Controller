@@ -7,10 +7,14 @@ import com.zen3515.mcrestful.MCRestful;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.client.util.InputMappings.Input;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.EntityRayTraceResult;
+import net.minecraft.util.math.RayTraceContext;
+import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.math.Vec3d;
 
 public class Utility {
 	
@@ -91,9 +95,6 @@ public class Utility {
 		final Minecraft mcInstance = Minecraft.getInstance();
 		if (mcInstance.objectMouseOver == null) {
             MCRestful.LOGGER.error("Null returned as 'hitResult', this shouldn't happen!");
-//            if (mcInstance.playerController.isNotCreative()) {
-////            	mcInstance.leftClickCounter = 10;
-//            }
 
          } else if (!mcInstance.player.isRowingBoat()) {
             net.minecraftforge.client.event.InputEvent.ClickInputEvent inputEvent = net.minecraftforge.client.ForgeHooksClient.onClickInput(0, MCRestful.gameSettings.keyBindAttack, Hand.MAIN_HAND);
@@ -110,14 +111,9 @@ public class Utility {
                   break;
                }
             case MISS:
-//               if (mcInstance.playerController.isNotCreative()) {
-////            	   mcInstance.leftClickCounter = 10;
-//               }
-
                mcInstance.player.resetCooldown();
                net.minecraftforge.common.ForgeHooks.onEmptyLeftClick(mcInstance.player);
             }
-
             if (inputEvent.shouldSwingHand())
             	mcInstance.player.swingArm(Hand.MAIN_HAND);
          }
@@ -125,5 +121,11 @@ public class Utility {
 	
 	public static boolean isSameBlockPos(BlockPos b1, BlockPos b2) {
 		return b1.getX() == b2.getX() && b1.getY() == b2.getY() && b1.getZ() == b2.getZ();
+	}
+	
+	public static Vec3d getLookAt(double distance, ServerPlayerEntity player) {
+		final RayTraceResult rayTraceResult = player.getEntityWorld().rayTraceBlocks(new RayTraceContext(player.getEyePosition(0f), player.getEyePosition(0f).add(player.getLookVec().scale(distance)), RayTraceContext.BlockMode.OUTLINE, RayTraceContext.FluidMode.ANY, player));
+		final Vec3d hitPosition = rayTraceResult.getHitVec();
+		return hitPosition;
 	}
 }

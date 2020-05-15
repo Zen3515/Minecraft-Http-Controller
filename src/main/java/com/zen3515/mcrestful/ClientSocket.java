@@ -22,6 +22,7 @@ import net.minecraft.entity.ILivingEntityData;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.SpawnReason;
+import net.minecraft.entity.effect.LightningBoltEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.Direction;
@@ -291,7 +292,6 @@ public class ClientSocket implements Runnable{
 			break;
 		case "GAME_PAUSE":
 			MCRestful.LOGGER.debug("GAME_PAUSE case: " + msg);
-//			Utility.pressReleaseKey(InputMappings.getInputByName("key.keyboard.escape"));
 			mcInstance.displayInGameMenu(false);
 			break;
 		case "GAME_RESUME":
@@ -373,12 +373,18 @@ public class ClientSocket implements Runnable{
 			MCRestful.LOGGER.debug("SUMMON_PIG case: " + msg);
 			CompoundNBT compoundnbt = new CompoundNBT();
 			compoundnbt.putString("id", EntityType.getKey(EntityType.PIG).toString());
+			Vec3d posPig = Utility.getLookAt(100, this.player);
 			Entity entity = EntityType.func_220335_a(compoundnbt, this.player.getServerWorld(), (pigEntity) -> {
-				pigEntity.setLocationAndAngles(this.player.getPositionVec().x, this.player.getPositionVec().y, this.player.getPositionVec().z, pigEntity.rotationYaw, pigEntity.rotationPitch);
+				pigEntity.setLocationAndAngles(posPig.x, posPig.y, posPig.z, pigEntity.rotationYaw, pigEntity.rotationPitch);
 	            return !this.player.getServerWorld().summonEntity(pigEntity) ? null : pigEntity;
 	         });
 			((MobEntity)entity).onInitialSpawn(this.player.getEntityWorld(), this.player.getEntityWorld().getDifficultyForLocation(new BlockPos(entity)), SpawnReason.COMMAND, (ILivingEntityData)null, (CompoundNBT)null);
 			break;
+		case "SUMMON_LIGHTNING":
+			MCRestful.LOGGER.debug("SUMMON_LIGHTNING case: " + msg);
+			Vec3d posLightning = Utility.getLookAt(100, this.player);
+			LightningBoltEntity lightningboltentity = new LightningBoltEntity(this.player.getServerWorld(), posLightning.x, posLightning.y, posLightning.z, false);
+	        this.player.getServerWorld().addLightningBolt(lightningboltentity);
 		}
 		return true;
 	}
