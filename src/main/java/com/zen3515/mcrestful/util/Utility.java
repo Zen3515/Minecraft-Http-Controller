@@ -7,7 +7,9 @@ import com.zen3515.mcrestful.MCRestful;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.client.util.InputMappings.Input;
+import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
@@ -127,5 +129,13 @@ public class Utility {
 		final RayTraceResult rayTraceResult = player.getEntityWorld().rayTraceBlocks(new RayTraceContext(player.getEyePosition(0f), player.getEyePosition(0f).add(player.getLookVec().scale(distance)), RayTraceContext.BlockMode.OUTLINE, RayTraceContext.FluidMode.ANY, player));
 		final Vec3d hitPosition = rayTraceResult.getHitVec();
 		return hitPosition;
+	}
+	
+	public static boolean addEnchantment(ItemStack itemstack, Enchantment enchantmentIn, int level) {
+		if (!itemstack.isEmpty() && enchantmentIn.canApply(itemstack)) {
+			itemstack.addEnchantment(enchantmentIn, level);
+			return true;
+		}
+		return false;
 	}
 }

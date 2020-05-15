@@ -16,6 +16,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.client.util.InputMappings;
+import net.minecraft.enchantment.Enchantment;
+import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.ILivingEntityData;
@@ -24,6 +26,7 @@ import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.effect.LightningBoltEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
@@ -385,6 +388,35 @@ public class ClientSocket implements Runnable{
 			Vec3d posLightning = Utility.getLookAt(100, this.player);
 			LightningBoltEntity lightningboltentity = new LightningBoltEntity(this.player.getServerWorld(), posLightning.x, posLightning.y, posLightning.z, false);
 	        this.player.getServerWorld().addLightningBolt(lightningboltentity);
+	        break;
+		case "ENCHANT_KNOCKBACK":
+			MCRestful.LOGGER.debug("ENCHANT_KNOCKBACK case: " + msg);
+			Utility.addEnchantment(this.player.getHeldItemMainhand(), Enchantments.KNOCKBACK, 3);
+			break;
+		case "ENCHANT_SHARPNESS":
+			MCRestful.LOGGER.debug("ENCHANT_SHARPNESS case: " + msg);
+			Utility.addEnchantment(this.player.getHeldItemMainhand(), Enchantments.SHARPNESS, 5);
+			break;
+		case "ENCHANT_FIRE_ASPECT":
+			MCRestful.LOGGER.debug("ENCHANT_FIRE_ASPECT case: " + msg);
+			Utility.addEnchantment(this.player.getHeldItemMainhand(), Enchantments.FIRE_ASPECT, 2);
+			break;
+		case "ENCHANT_INFINITY":
+			MCRestful.LOGGER.debug("ENCHANT_INFINITY case: " + msg);
+			Utility.addEnchantment(this.player.getHeldItemMainhand(), Enchantments.INFINITY, 1);
+			break;
+		case "ENCHANT_FLAME":
+			MCRestful.LOGGER.debug("ENCHANT_FLAME case: " + msg);
+			Utility.addEnchantment(this.player.getHeldItemMainhand(), Enchantments.FLAME, 1);
+			break;
+		case "ENCHANT_UNBREAKING":
+			MCRestful.LOGGER.debug("ENCHANT_UNBREAKING case: " + msg);
+			Utility.addEnchantment(this.player.getHeldItemMainhand(), Enchantments.UNBREAKING, 5);
+			break;
+		case "ENCHANT_POWER":
+			MCRestful.LOGGER.debug("ENCHANT_POWER case: " + msg);
+			Utility.addEnchantment(this.player.getHeldItemMainhand(), Enchantments.POWER, 5);
+			break;
 		}
 		return true;
 	}
