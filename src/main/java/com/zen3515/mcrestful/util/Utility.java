@@ -1,6 +1,11 @@
 package com.zen3515.mcrestful.util;
 
+import java.awt.AWTException;
+import java.awt.Robot;
+import java.awt.event.KeyEvent;
 import java.util.concurrent.Callable;
+
+import javax.annotation.Nullable;
 
 import com.zen3515.mcrestful.MCRestful;
 
@@ -19,6 +24,44 @@ import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 
 public class Utility {
+	
+	public static final Utility instance = new Utility();
+	
+	@Nullable
+	public static Robot keyboradRobot = null;
+	static {
+		Robot temp;
+		try {
+			temp = new Robot();
+		} catch (AWTException e) {
+			temp = null;
+		}
+		keyboradRobot = temp;
+	}
+	
+	public static void pressKeyboardEsc() {
+		Utility.pressKeyboard(KeyEvent.VK_ESCAPE, 50L);
+	}
+	
+	public static void pressKeyboard(int key, long holdDuration) {
+		if(Utility.keyboradRobot == null) {
+			try {
+				Utility.keyboradRobot = new Robot();
+			} catch (AWTException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		Utility.keyboradRobot.keyPress(key);
+		if(holdDuration > 0){
+			Utility.launchDelayFunction(() -> {
+				Utility.keyboradRobot.keyRelease(key);
+				return null;
+			}, holdDuration);
+		} else {
+			Utility.keyboradRobot.keyRelease(key);
+		}
+	}
 	
 	/**
 	 * Schedule At FixedRate a function call

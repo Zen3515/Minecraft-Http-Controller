@@ -299,16 +299,7 @@ public class ClientSocket implements Runnable{
 			break;
 		case "GAME_RESUME":
 			MCRestful.LOGGER.debug("GAME_RESUME case: " + msg);
-//			mcInstance.setGameFocused(true);
-//			Utility.pressReleaseKey(InputMappings.getInputByName("key.keyboard.escape"));
-			this.player.sendMessage(new StringTextComponent("mcInstance.isGameFocused() = " + mcInstance.isGameFocused() + mcInstance.mouseHelper.isMouseGrabbed()), ChatType.CHAT);
-			mcInstance.currentScreen.keyPressed(256, 0, 0); //press esc
-			this.player.sendMessage(new StringTextComponent("mcInstance.isGameFocused() = " + mcInstance.isGameFocused() + mcInstance.mouseHelper.isMouseGrabbed()), ChatType.CHAT);
-//			mcInstance.displayGuiScreen((Screen)null);
-//			mcInstance.mouseHelper.ungrabMouse();
-//			mcInstance.setGameFocused(true);
-//			mcInstance.mouseHelper.grabMouse(); //TODO: bug does not grab the mouse
-//			mcInstance.currentScreen.setFocused(p_setFocused_1_);
+			mcInstance.enqueue(() -> mcInstance.displayGuiScreen((Screen)null));
 			break;
 		case "WEATHER_RAIN":
 			MCRestful.LOGGER.debug("WEATHER_RAIN case: " + msg);
