@@ -28,6 +28,9 @@ import net.minecraft.entity.effect.LightningBoltEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.potion.Effect;
+import net.minecraft.potion.EffectInstance;
+import net.minecraft.potion.Effects;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
@@ -407,6 +410,34 @@ public class ClientSocket implements Runnable{
 		case "ENCHANT_POWER":
 			MCRestful.LOGGER.debug("ENCHANT_POWER case: " + msg);
 			Utility.addEnchantment(this.player.getHeldItemMainhand(), Enchantments.POWER, 5);
+			break;
+		case "CLEAR_INVENTORY":
+			MCRestful.LOGGER.debug("CLEAR_INVENTORY case: " + msg);
+			this.player.inventory.clear();
+			break;
+		case "POTION_INVISIBLE":
+			MCRestful.LOGGER.debug("POTION_INVISIBLE case: " + msg);
+			this.player.addPotionEffect(new EffectInstance(Effects.INVISIBILITY, 600, 0, false, true));
+			break;
+		case "POTION_SPEED":
+			MCRestful.LOGGER.debug("POTION_SPEED case: " + msg);
+			this.player.addPotionEffect(new EffectInstance(Effects.SPEED, 600, 0, false, true));
+			break;
+		case "POTION_FIRE_RESIST":
+			MCRestful.LOGGER.debug("POTION_FIRE_RESIST case: " + msg);
+			this.player.addPotionEffect(new EffectInstance(Effects.FIRE_RESISTANCE, 600, 0, false, true));
+			break;
+		case "POTION_HEAL":
+			MCRestful.LOGGER.debug("POTION_HEAL case: " + msg);
+			this.player.addPotionEffect(new EffectInstance(Effects.INSTANT_HEALTH, 600, 0, false, true));
+			break;
+		case "FILL_HUNGER":
+			MCRestful.LOGGER.debug("FILL_HUNGER case: " + msg);
+			this.player.getFoodStats().setFoodLevel(this.player.getFoodStats().getFoodLevel()+1);
+			break;
+		case "CLEAR_ARMOR":
+			MCRestful.LOGGER.debug("CLEAR_ARMOR case: " + msg);
+			this.player.inventory.armorInventory.clear();
 			break;
 		}
 		return true;
