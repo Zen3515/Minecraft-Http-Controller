@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.Random;
 
 import com.zen3515.mcrestful.util.Utility;
 
@@ -519,6 +520,60 @@ public class ClientSocket implements Runnable{
 			this.player.inventory.setInventorySlotContents(placeInex, fromItem);
 			this.player.inventory.setInventorySlotContents(this.holdingItemInex, toItem);
 			break;
+		case "TP_RANDOM":
+			MCRestful.LOGGER.debug("TP_RANDOM case: " + msg);
+			while(true) {
+				BlockPos tpPos = new BlockPos((new Random()).nextInt(10000) + -5000, 128, (new Random()).nextInt(10000) + -5000);
+				int tpYOffest = 1;
+				while(++tpYOffest < 128 && this.player.getServerWorld().isAirBlock(tpPos.down(tpYOffest)));
+				if(tpYOffest == 128) {
+					continue;
+				}
+				tpPos = tpPos.down(tpYOffest-1);
+				this.player.setPositionAndUpdate(tpPos.getX(), tpPos.getY(), tpPos.getZ());
+				break;
+			}
+			break;
+		case "TP_FORWARD":
+			MCRestful.LOGGER.debug("TP_FORWARD case: " + msg);
+			{
+				Vec3d tpPos = this.player.getPositionVec().add(this.player.getForward().rotateYaw(0).scale(5));
+				BlockPos checkVec = new BlockPos(tpPos).down(3);
+				int tpYOffest = 0;
+				while(tpYOffest + tpPos.y < 127 && !this.player.getServerWorld().isAirBlock(checkVec.up(++tpYOffest)));
+				this.player.setPositionAndUpdate(tpPos.getX(), checkVec.up(tpYOffest).getY(), tpPos.getZ());
+				break;
+			}
+		case "TP_BACKWARD":
+			MCRestful.LOGGER.debug("TP_BACKWARD case: " + msg);
+			{
+				Vec3d tpPos = this.player.getPositionVec().add(this.player.getForward().rotateYaw((float) Math.toRadians(180)).scale(5));
+				BlockPos checkVec = new BlockPos(tpPos).down(3);
+				int tpYOffest = 0;
+				while(tpYOffest + tpPos.y < 127 && !this.player.getServerWorld().isAirBlock(checkVec.up(++tpYOffest)));
+				this.player.setPositionAndUpdate(tpPos.getX(), checkVec.up(tpYOffest).getY(), tpPos.getZ());
+				break;
+			}
+		case "TP_LEFT":
+			MCRestful.LOGGER.debug("TP_LEFT case: " + msg);
+			{
+				Vec3d tpPos = this.player.getPositionVec().add(this.player.getForward().rotateYaw((float) Math.toRadians(90)).scale(5));
+				BlockPos checkVec = new BlockPos(tpPos).down(3);
+				int tpYOffest = 0;
+				while(tpYOffest + tpPos.y < 127 && !this.player.getServerWorld().isAirBlock(checkVec.up(++tpYOffest)));
+				this.player.setPositionAndUpdate(tpPos.getX(), checkVec.up(tpYOffest).getY(), tpPos.getZ());
+				break;
+			}
+		case "TP_RIGHT":
+			MCRestful.LOGGER.debug("TP_RIGHT case: " + msg);
+			{
+				Vec3d tpPos = this.player.getPositionVec().add(this.player.getForward().rotateYaw((float) Math.toRadians(-90)).scale(5));
+				BlockPos checkVec = new BlockPos(tpPos).down(3);
+				int tpYOffest = 0;
+				while(tpYOffest + tpPos.y < 127 && !this.player.getServerWorld().isAirBlock(checkVec.up(++tpYOffest)));
+				this.player.setPositionAndUpdate(tpPos.getX(), checkVec.up(tpYOffest).getY(), tpPos.getZ());
+				break;
+			}
 		}
 		return true;
 	}
