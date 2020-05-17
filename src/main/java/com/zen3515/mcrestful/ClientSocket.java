@@ -6,47 +6,38 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.concurrent.Callable;
 
 import com.zen3515.mcrestful.util.Utility;
 
-import net.minecraft.block.BlockState;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.settings.KeyBinding;
-import net.minecraft.client.util.InputMappings;
-import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.ILivingEntityData;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.effect.LightningBoltEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.UseAction;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
-import net.minecraft.util.Direction;
-import net.minecraft.util.Hand;
+import net.minecraft.util.concurrent.TickDelayedTask;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.EntityRayTraceResult;
-import net.minecraft.util.math.RayTraceContext;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.ChatType;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.Difficulty;
+import net.minecraft.world.GameType;
 import net.minecraft.world.server.ServerWorld;
-import net.minecraftforge.client.event.InputEvent;
-import net.minecraftforge.client.event.InputEvent.ClickInputEvent;
-import net.minecraftforge.common.MinecraftForge;
 
 public class ClientSocket implements Runnable{
 
@@ -55,6 +46,7 @@ public class ClientSocket implements Runnable{
 	private PrintWriter out;
 	private BufferedReader in;
 	public volatile boolean isRunning = false;
+	private int holdingItemInex;
 	
 	public ClientSocket(ServerPlayerEntity player) {
 		this.player = player;
@@ -81,7 +73,8 @@ public class ClientSocket implements Runnable{
         }
 	}
 	
-	private boolean handleMessage(String msg) {
+	private boolean handleMessage(String[] tokCommand) {
+		String msg = tokCommand[0];
 		MCRestful.LOGGER.info("Processing message: " + msg);
 		final Minecraft mcInstance = Minecraft.getInstance();
 		this.player.sendMessage(new StringTextComponent("Processing message: " + msg), ChatType.CHAT);
@@ -431,6 +424,18 @@ public class ClientSocket implements Runnable{
 			MCRestful.LOGGER.debug("POTION_HEAL case: " + msg);
 			this.player.addPotionEffect(new EffectInstance(Effects.INSTANT_HEALTH, 600, 0, false, true));
 			break;
+		case "POTION_WATER_BREATHING":
+			MCRestful.LOGGER.debug("POTION_WATER_BREATHING case: " + msg);
+			this.player.addPotionEffect(new EffectInstance(Effects.WATER_BREATHING, 600, 0, false, true));
+			break;
+		case "POTION_NIGHT_VISION":
+			MCRestful.LOGGER.debug("POTION_NIGHT_VISION case: " + msg);
+			this.player.addPotionEffect(new EffectInstance(Effects.NIGHT_VISION, 600, 0, false, true));
+			break;
+		case "POTION_POISON":
+			MCRestful.LOGGER.debug("POTION_POISON case: " + msg);
+			this.player.addPotionEffect(new EffectInstance(Effects.POISON, 600, 0, false, true));
+			break;
 		case "FILL_HUNGER":
 			MCRestful.LOGGER.debug("FILL_HUNGER case: " + msg);
 			this.player.getFoodStats().setFoodLevel(this.player.getFoodStats().getFoodLevel()+1);
@@ -438,6 +443,81 @@ public class ClientSocket implements Runnable{
 		case "CLEAR_ARMOR":
 			MCRestful.LOGGER.debug("CLEAR_ARMOR case: " + msg);
 			this.player.inventory.armorInventory.clear();
+			break;
+		case "CLEAR_EFFECT":
+			MCRestful.LOGGER.debug("CLEAR_EFFECT case: " + msg);
+			this.player.clearActivePotions();
+			break;
+		case "GAMEMODE_CREATIVE":
+			MCRestful.LOGGER.debug("GAMEMODE_CREATIVE case: " + msg);
+			this.player.setGameType(GameType.CREATIVE);
+			break;
+		case "GAMEMODE_SURVIVAL":
+			MCRestful.LOGGER.debug("GAMEMODE_SURVIVAL case: " + msg);
+			this.player.setGameType(GameType.SURVIVAL);
+			break;
+		case "SET_FIRE":
+			MCRestful.LOGGER.debug("SET_FIRE case: " + msg);
+			this.player.setFire(10);
+			break;
+		case "MOUNT_LOOKAT":
+			MCRestful.LOGGER.debug("MOUNT_LOOKAT case: " + msg);
+			if(mcInstance.objectMouseOver.getType() == RayTraceResult.Type.ENTITY) {
+				final int mountingEntityId = ((EntityRayTraceResult)mcInstance.objectMouseOver).getEntity().getEntityId();
+				this.player.getServer().enqueue(new TickDelayedTask(this.player.getServer().getTickCounter(), () -> {
+					this.player.startRiding(this.player.world.getEntityByID(mountingEntityId), true); // server side
+				}));
+			}
+			break;
+		case "MOUSE_RIGHT_USE_ITEM":
+			MCRestful.LOGGER.debug("MOUSE_RIGHT_USE_ITEM case: " + msg);
+			ItemStack heldItem = this.player.inventory.getCurrentItem().copy();
+			if(!heldItem.isEmpty() && (heldItem.getUseAction() == UseAction.EAT || heldItem.getUseAction() == UseAction.DRINK)) {
+				KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindUseItem.getKey(), true);
+				Utility.launchDelayScheduleFunction(() -> {
+					ItemStack holdingItem = this.player.inventory.getCurrentItem().copy();
+					if(!ItemStack.areItemStackTagsEqual(holdingItem, heldItem)) {
+						KeyBinding.setKeyBindState(MCRestful.gameSettings.keyBindUseItem.getKey(), false);
+						return true;
+					}
+					return false;
+				}, 0L, 50L, 200); //At most 10 sec
+			}
+			break;
+		case "DROP":
+			MCRestful.LOGGER.debug("DROP case: " + msg);
+			this.player.dropItem(this.player.inventory.getCurrentItem(), true);
+			mcInstance.playerController.sendPacketDropItem(this.player.inventory.getCurrentItem());
+			this.player.inventory.setInventorySlotContents(this.player.inventory.currentItem, ItemStack.EMPTY);
+			break;
+		case "SEL_INVENTORY":
+			MCRestful.LOGGER.debug("SEL_INVENTORY case: " + msg);
+			int selInex = Integer.parseInt(tokCommand[1]);
+			if(selInex < 9) {
+				mcInstance.player.inventory.currentItem = selInex;
+			} else {
+				this.holdingItemInex = selInex;
+			}
+			break;
+		case "HOLD_INVENTORY":
+			MCRestful.LOGGER.debug("HOLD_INVENTORY case: " + msg);
+			int holdInex = Integer.parseInt(tokCommand[1]);
+			if(holdInex < 9) {
+				mcInstance.player.inventory.currentItem = holdInex;
+			} else {
+				this.holdingItemInex = holdInex;
+			}
+			break;
+		case "PLACE_INVENTORY":
+			MCRestful.LOGGER.debug("PLACE_INVENTORY case: " + msg);
+			int placeInex = Integer.parseInt(tokCommand[1]);
+			ItemStack fromItem = this.player.inventory.getStackInSlot(this.holdingItemInex);
+			if(fromItem.isEmpty()) {
+				break;
+			}
+			ItemStack toItem = this.player.inventory.getStackInSlot(placeInex);
+			this.player.inventory.setInventorySlotContents(placeInex, fromItem);
+			this.player.inventory.setInventorySlotContents(this.holdingItemInex, toItem);
 			break;
 		}
 		return true;
@@ -449,7 +529,8 @@ public class ClientSocket implements Runnable{
 		while (this.isRunning) {
 			try {
 				String command = this.in.readLine();
-				handleMessage(command);
+				String[] tokCommand = command.split(",");
+				handleMessage(tokCommand);
 			} catch (IOException e) {
 	        	MCRestful.LOGGER.error("I/O Error when readline\n" + e.getMessage());
 			}
